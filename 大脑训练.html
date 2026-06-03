@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大脑训练</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+    .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+    
+    /* 主菜单 */
+    .menu {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding-top: 40px;
+    }
+    .menu h1 { font-size: 2.5em; margin-bottom: 20px; text-shadow: 0 0 20px rgba(255,255,255,0.3); }
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      width: 100%;
+      max-width: 500px;
+    }
+    .game-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+    .game-card:hover {
+      transform: translateY(-5px);
+      border-color: #4a90d9;
+      box-shadow: 0 10px 30px rgba(74,144,217,0.3);
+    }
+    .game-card .icon { font-size: 3em; margin-bottom: 10px; }
+    .game-card h3 { margin-bottom: 8px; }
+    .game-card p { font-size: 0.9em; opacity: 0.7; }
+    
+    .back-btn {
+      margin-top: 30px;
+      padding: 12px 30px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.2); }
+    
+    /* 游戏区域 */
+    .game-area { display: none; }
+    .game-area.active { display: block; }
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 15px 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+    }
+    .stat { text-align: center; }
+    .stat-label { font-size: 0.85em; opacity: 0.7; }
+    .stat-value { font-size: 1.5em; font-weight: bold; color: #4a90d9; }
+    
+    /* 记忆翻牌 */
+    .card-grid {
+      display: grid;
+      gap: 12px;
+      margin: 0 auto;
+    }
+    .card-grid.sch3 { grid-template-columns: repeat(3, 1fr); max-width: 270px; }
+    .card-grid.sch4 { grid-template-columns: repeat(4, 1fr); max-width: 360px; }
+    .card-grid.sch5 { grid-template-columns: repeat(5, 1fr); max-width: 450px; }
+    .card-grid.sch6 { grid-template-columns: repeat(6, 1fr); max-width: 540px; }
+    .card-grid:not(.sch3):not(.sch4):not(.sch5):not(.sch6) { grid-template-columns: repeat(4, 1fr); max-width: 400px; }
+    .card {
+      aspect-ratio: 1;
+      background: #2a3f5f;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5em;
+      transition: all 0.3s;
+      user-select: none;
+    }
+    .card:hover { transform: scale(1.05); }
+    .card.flipped {
+      background: #fff;
+      color: #1a1a2e;
+      transform: rotateY(180deg);
+    }
+    .card.matched {
+      background: #4caf50;
+      pointer-events: none;
+    }
+    
+    /* 数字记忆 */
+    .number-display {
+      font-size: 4em;
+      font-weight: bold;
+      text-align: center;
+      padding: 60px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 16px;
+      margin: 20px 0;
+      letter-spacing: 0.3em;
+    }
+    .number-input {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .number-input input {
+      width: 50px;
+      height: 50px;
+      text-align: center;
+      font-size: 1.5em;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    
+    /* 反应速度 */
+    .reaction-area {
+      width: 100%;
+      height: 300px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+    .reaction-area.red { background: #e74c3c; }
+    .reaction-area.green { background: #2ecc71; }
+    .reaction-area.yellow { background: #f39c12; }
+    .reaction-text { font-size: 1.5em; text-align: center; }
+    
+    /* 心算挑战 */
+    .math-problem {
+      font-size: 2.5em;
+      text-align: center;
+      padding: 40px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 16px;
+      margin: 20px 0;
+    }
+    .math-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .math-option {
+      padding: 20px;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1.5em;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .math-option:hover { border-color: #4a90d9; }
+    .math-option.correct { background: #2ecc71; }
+    .math-option.wrong { background: #e74c3c; }
+    
+    .game-btn {
+      display: block;
+      margin: 20px auto;
+      padding: 15px 40px;
+      background: #4a90d9;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .game-btn:hover { background: #357abd; }
+    
+    .result-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .result-card {
+      background: #1a1a2e;
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 400px;
+    }
+    .result-card h2 { font-size: 2em; margin-bottom: 20px; }
+    .result-card .score { font-size: 3em; color: #4a90d9; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 主菜单 -->
+    <div id="menu" class="menu">
+      <h1>🧠 大脑训练</h1>
+      <div class="menu-grid">
+        <div class="game-card" onclick="showGame('memory')">
+          <div class="icon">🃏</div>
+          <h3>记忆翻牌</h3>
+          <p>记住卡牌位置，快速配对</p>
+        </div>
+        <div class="game-card" onclick="showGame('number')">
+          <div class="icon">🔢</div>
+          <h3>数字记忆</h3>
+          <p>记住闪过的数字序列</p>
+        </div>
+        <div class="game-card" onclick="showGame('reaction')">
+          <div class="icon">⚡</div>
+          <h3>反应速度</h3>
+          <p>眼疾手快，测测你的反应</p>
+        </div>
+        <div class="game-card" onclick="showGame('math')">
+          <div class="icon">🧮</div>
+          <h3>心算挑战</h3>
+          <p>限时抢答数学题</p>
+        </div>
+        <div class="game-card" onclick="showGame('schulte')">
+          <div class="icon">🎯</div>
+          <h3>舒尔特表</h3>
+          <p>眼疾手快，按顺序点击数字</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 记忆翻牌 -->
+    <div id="memory-game" class="game-area">
+      <div class="game-header">
+        <div class="stat"><div class="stat-label">用时</div><div class="stat-value" id="mem-time">0</div></div>
+        <div class="stat"><div class="stat-label">步数</div><div class="stat-value" id="mem-moves">0</div></div>
+        <div class="stat"><div class="stat-label">配对</div><div class="stat-value" id="mem-pairs">0/8</div></div>
+      </div>
+      <div id="mem-grid" class="card-grid"></div>
+      <button class="back-btn" onclick="showMenu()">返回菜单</button>
+    </div>
+    
+    <!-- 数字记忆 -->
+    <div id="number-game" class="game-area">
+      <div class="game-header">
+        <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="num-level">1</div></div>
+        <div class="stat"><div class="stat-label">得分</div><div class="stat-value" id="num-score">0</div></div>
+      </div>
+      <div id="num-display" class="number-display">准备开始</div>
+      <div id="num-input" class="number-input" style="display:none;"></div>
+      <button class="game-btn" id="num-start-btn" onclick="startNumberGame()">开始挑战</button>
+      <button class="back-btn" onclick="showMenu()">返回菜单</button>
+    </div>
+    
+    <!-- 反应速度 -->
+    <div id="reaction-game" class="game-area">
+      <div class="game-header">
+        <div class="stat"><div class="stat-label">最佳</div><div class="stat-value" id="react-best">--</div></div>
+        <div class="stat"><div class="stat-label">平均</div><div class="stat-value" id="react-avg">--</div></div>
+        <div class="stat"><div class="stat-label">次数</div><div class="stat-value" id="react-count">0</div></div>
+      </div>
+      <div id="react-area" class="reaction-area" onclick="reactClick()">
+        <div class="reaction-text">点击开始</div>
+      </div>
+      <button class="back-btn" onclick="showMenu()">返回菜单</button>
+    </div>
+    
+    <!-- 心算挑战 -->
+    <div id="math-game" class="game-area">
+      <div class="game-header">
+        <div class="stat"><div class="stat-label">分数</div><div class="stat-value" id="math-score">0</div></div>
+        <div class="stat"><div class="stat-label">连击</div><div class="stat-value" id="math-combo">0</div></div>
+        <div class="stat"><div class="stat-label">生命</div><div class="stat-value" id="math-life">❤️❤️❤️</div></div>
+      </div>
+      <div id="math-problem" class="math-problem"></div>
+      <div id="math-options" class="math-options"></div>
+      <button class="back-btn" onclick="showMenu()">返回菜单</button>
+    </div>
+
+    <!-- 舒尔特表 -->
+    <div id="schulte-game" class="game-area">
+      <div class="game-header">
+        <div class="stat"><div class="stat-label">用时</div><div class="stat-value" id="sch-time">0.0</div></div>
+        <div class="stat"><div class="stat-label">目标</div><div class="stat-value" id="sch-target">1</div></div>
+        <div class="stat"><div class="stat-label">难度</div><div class="stat-value" id="sch-difficulty">3×3</div></div>
+      </div>
+      <div id="sch-size-selector" style="text-align:center;margin-bottom:15px;">
+        <button class="game-btn" onclick="setSchulteSize(3)" style="padding:8px 20px;">3×3</button>
+        <button class="game-btn" onclick="setSchulteSize(4)" style="padding:8px 20px;">4×4</button>
+        <button class="game-btn" onclick="setSchulteSize(5)" style="padding:8px 20px;">5×5</button>
+        <button class="game-btn" onclick="setSchulteSize(6)" style="padding:8px 20px;">6×6</button>
+      </div>
+      <div id="sch-grid" class="card-grid" style="max-width:450px;"></div>
+      <button class="game-btn" onclick="initSchulte()" style="margin-top:15px;">开始</button>
+      <button class="back-btn" onclick="showMenu()">返回菜单</button>
+    </div>
+  </div>
+
+  <script>
+    // 全局
+    function showMenu() {
+      document.querySelectorAll('.game-area').forEach(g => g.classList.remove('active'));
+      document.getElementById('menu').style.display = 'flex';
+    }
+    function showGame(id) {
+      document.getElementById('menu').style.display = 'none';
+      document.querySelectorAll('.game-area').forEach(g => g.classList.remove('active'));
+      document.getElementById(id + '-game').classList.add('active');
+    }
+    
+    // ========== 记忆翻牌 ==========
+    const memSymbols = ['🔴','🔵','🟢','🟡','🟣','🟠','⚫','⚪'];
+    let memCards, memFlipped, memMatchedSet, memMoves, memTimer, memSeconds, memLocked;
+
+    function initMemory() {
+      memCards = [...memSymbols, ...memSymbols].sort(() => Math.random() - 0.5);
+      memFlipped = [];
+      memMatchedSet = new Set();
+      memMoves = 0;
+      memSeconds = 0;
+      memLocked = false;
+      clearInterval(memTimer);
+      memTimer = setInterval(() => {
+        memSeconds++;
+        document.getElementById('mem-time').textContent = memSeconds;
+      }, 1000);
+      updateMemoryUI();
+    }
+
+    function updateMemoryUI() {
+      const grid = document.getElementById('mem-grid');
+      grid.innerHTML = '';
+      memCards.forEach((sym, i) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        if (memMatchedSet.has(i)) {
+          card.classList.add('flipped', 'matched');
+          card.textContent = sym;
+        } else if (memFlipped.includes(i)) {
+          card.classList.add('flipped');
+          card.textContent = sym;
+        }
+        if (!memMatchedSet.has(i)) {
+          card.onclick = () => flipCard(i);
+        }
+        grid.appendChild(card);
+      });
+      document.getElementById('mem-moves').textContent = memMoves;
+      document.getElementById('mem-pairs').textContent = memMatchedSet.size / 2 + '/8';
+    }
+
+    function flipCard(idx) {
+      if (memLocked) return;
+      if (memFlipped.includes(idx)) return;
+      if (memMatchedSet.has(idx)) return;
+      if (memFlipped.length >= 2) return;
+
+      memFlipped.push(idx);
+      updateMemoryUI();
+
+      if (memFlipped.length === 2) {
+        memMoves++;
+        memLocked = true;
+        const [a, b] = memFlipped;
+        if (memCards[a] === memCards[b]) {
+          memMatchedSet.add(a);
+          memMatchedSet.add(b);
+          memFlipped = [];
+          memLocked = false;
+          updateMemoryUI();
+          if (memMatchedSet.size === memCards.length) {
+            clearInterval(memTimer);
+            setTimeout(() => showResult('记忆翻牌', memSeconds + '秒', '步数: ' + memMoves), 500);
+          }
+        } else {
+          setTimeout(() => {
+            memFlipped = [];
+            memLocked = false;
+            updateMemoryUI();
+          }, 800);
+        }
+      }
+    }
+    
+    // ========== 数字记忆 ==========
+    let numLevel = 1, numScore = 0, numSequence = [], numInputting = false;
+    
+    function startNumberGame() {
+      numLevel = 1;
+      numScore = 0;
+      document.getElementById('num-level').textContent = numLevel;
+      document.getElementById('num-score').textContent = numScore;
+      showNumberSequence();
+    }
+    
+    function showNumberSequence() {
+      const len = 3 + numLevel;
+      numSequence = Array.from({length: len}, () => Math.floor(Math.random() * 10));
+      document.getElementById('num-input').style.display = 'none';
+      document.getElementById('num-start-btn').style.display = 'none';
+      const display = document.getElementById('num-display');
+      display.textContent = numSequence.join(' ');
+      display.style.opacity = '1';
+      
+      setTimeout(() => {
+        display.style.opacity = '0';
+        setTimeout(() => {
+          display.textContent = '请输入刚才的数字';
+          display.style.opacity = '1';
+          showNumberInput();
+        }, 300);
+      }, 1500 + len * 300);
+    }
+    
+    function showNumberInput() {
+      const inputDiv = document.getElementById('num-input');
+      inputDiv.style.display = 'flex';
+      inputDiv.innerHTML = '';
+      for (let i = 0; i < numSequence.length; i++) {
+        const inp = document.createElement('input');
+        inp.type = 'tel';
+        inp.inputMode = 'numeric';
+        inp.maxLength = 1;
+        inp.dataset.idx = i;
+        
+        inp.addEventListener('input', function(e) {
+          // 只保留最后一个数字
+          const val = this.value.replace(/\D/g, '').slice(-1);
+          this.value = val;
+          
+          if (val && this.dataset.idx < numSequence.length - 1) {
+            inputDiv.children[parseInt(this.dataset.idx) + 1]?.focus();
+          }
+          if (this.dataset.idx == numSequence.length - 1 && val) {
+            checkNumberAnswer(inputDiv);
+          }
+        });
+        
+        inp.addEventListener('keydown', function(e) {
+          // 按回车直接提交
+          if (e.key === 'Enter') {
+            checkNumberAnswer(inputDiv);
+          }
+          // 按删除键往前跳
+          if (e.key === 'Backspace' && !this.value && this.dataset.idx > 0) {
+            inputDiv.children[parseInt(this.dataset.idx) - 1]?.focus();
+          }
+        });
+        
+        inputDiv.appendChild(inp);
+      }
+      inputDiv.children[0]?.focus();
+    }
+    
+    function checkNumberAnswer(inputDiv) {
+      const answer = Array.from(inputDiv.children).map(i => i.value).join('');
+      if (answer === numSequence.join('')) {
+        numScore += numLevel * 10;
+        numLevel++;
+        document.getElementById('num-level').textContent = numLevel;
+        document.getElementById('num-score').textContent = numScore;
+        setTimeout(showNumberSequence, 500);
+      } else {
+        showResult('数字记忆', '等级 ' + numLevel, '得分: ' + numScore);
+        setTimeout(startNumberGame, 2000);
+      }
+    }
+    
+    // ========== 反应速度 ==========
+    let reactState = 'idle', reactStart, reactTimeout, reactTimes = [];
+    
+    function reactClick() {
+      const area = document.getElementById('react-area');
+      if (reactState === 'idle') {
+        area.className = 'reaction-area';
+        area.innerHTML = '<div class="reaction-text">等待变绿...</div>';
+        area.style.background = '#333';
+        reactState = 'waiting';
+        const delay = 2000 + Math.random() * 3000;
+        reactTimeout = setTimeout(() => {
+          area.className = 'reaction-area green';
+          area.innerHTML = '<div class="reaction-text">点击！</div>';
+          reactStart = Date.now();
+          reactState = 'ready';
+        }, delay);
+      } else if (reactState === 'waiting') {
+        clearTimeout(reactTimeout);
+        area.className = 'reaction-area red';
+        area.innerHTML = '<div class="reaction-text">太早了！点击重试</div>';
+        reactState = 'idle';
+      } else if (reactState === 'ready') {
+        const reaction = Date.now() - reactStart;
+        reactTimes.push(reaction);
+        area.className = 'reaction-area';
+        area.innerHTML = '<div class="reaction-text">' + reaction + 'ms<br><small>点击继续</small></div>';
+        document.getElementById('react-best').textContent = Math.min(...reactTimes) + 'ms';
+        document.getElementById('react-avg').textContent = Math.round(reactTimes.reduce((a,b)=>a+b,0)/reactTimes.length) + 'ms';
+        document.getElementById('react-count').textContent = reactTimes.length;
+        reactState = 'idle';
+      }
+    }
+    
+    // ========== 心算挑战 ==========
+    let mathScore = 0, mathCombo = 0, mathLife = 3, mathCorrect, mathTimer;
+    
+    function newMathProblem() {
+      clearTimeout(mathTimer);
+      const ops = ['+', '-', '×'];
+      const op = ops[Math.floor(Math.random() * ops.length)];
+      let a, b, answer;
+      
+      if (op === '+') {
+        a = Math.floor(Math.random() * 50) + 10;
+        b = Math.floor(Math.random() * 50) + 10;
+        answer = a + b;
+      } else if (op === '-') {
+        a = Math.floor(Math.random() * 50) + 30;
+        b = Math.floor(Math.random() * 30) + 1;
+        answer = a - b;
+      } else {
+        a = Math.floor(Math.random() * 12) + 2;
+        b = Math.floor(Math.random() * 12) + 2;
+        answer = a * b;
+      }
+      
+      mathCorrect = answer;
+      document.getElementById('math-problem').textContent = a + ' ' + op + ' ' + b + ' = ?';
+      
+      const options = [answer];
+      while (options.length < 4) {
+        const wrong = answer + (Math.floor(Math.random() * 20) - 10);
+        if (wrong !== answer && wrong > 0 && !options.includes(wrong)) {
+          options.push(wrong);
+        }
+      }
+      options.sort(() => Math.random() - 0.5);
+      
+      const optDiv = document.getElementById('math-options');
+      optDiv.innerHTML = '';
+      options.forEach(opt => {
+        const btn = document.createElement('div');
+        btn.className = 'math-option';
+        btn.textContent = opt;
+        btn.onclick = () => checkMathAnswer(opt, btn);
+        optDiv.appendChild(btn);
+      });
+      
+      mathTimer = setTimeout(() => {
+        mathCombo = 0;
+        mathLife--;
+        document.getElementById('math-life').textContent = '❤️'.repeat(mathLife) + '🖤'.repeat(3 - mathLife);
+        if (mathLife <= 0) {
+          showResult('心算挑战', mathScore + '分', '连击: ' + mathCombo);
+          mathScore = 0; mathCombo = 0; mathLife = 3;
+        }
+        updateMathUI();
+        newMathProblem();
+      }, 8000);
+    }
+    
+    function checkMathAnswer(opt, btn) {
+      clearTimeout(mathTimer);
+      if (opt === mathCorrect) {
+        mathCombo++;
+        mathScore += 10 + mathCombo * 2;
+        btn.classList.add('correct');
+      } else {
+        mathCombo = 0;
+        mathLife--;
+        btn.classList.add('wrong');
+        document.getElementById('math-life').textContent = '❤️'.repeat(mathLife) + '🖤'.repeat(3 - mathLife);
+      }
+      updateMathUI();
+      setTimeout(newMathProblem, 500);
+    }
+    
+    function updateMathUI() {
+      document.getElementById('math-score').textContent = mathScore;
+      document.getElementById('math-combo').textContent = mathCombo;
+    }
+
+    // ========== 舒尔特表 ==========
+    let schSize = 3, schCurrent = 1, schTotal, schTimer, schStartTime, schRunning;
+
+    function setSchulteSize(size) {
+      schSize = size;
+      document.getElementById('sch-difficulty').textContent = size + '×' + size;
+    }
+
+    function initSchulte() {
+      clearInterval(schTimer);
+      schCurrent = 1;
+      schTotal = schSize * schSize;
+      schRunning = false;
+      document.getElementById('sch-target').textContent = '1';
+      document.getElementById('sch-time').textContent = '0.0';
+      renderSchulteGrid();
+    }
+
+    function renderSchulteGrid() {
+      const grid = document.getElementById('sch-grid');
+      grid.className = 'card-grid sch' + schSize;
+      grid.innerHTML = '';
+
+      // 生成打乱的数字序列
+      const nums = Array.from({length: schTotal}, (_, i) => i + 1);
+      for (let i = nums.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [nums[i], nums[j]] = [nums[j], nums[i]];
+      }
+
+      const colors = [
+        ['#c0392b','#fff'],['#2980b9','#fff'],['#27ae60','#fff'],['#e67e22','#fff'],
+        ['#8e44ad','#fff'],['#16a085','#fff'],['#d35400','#fff'],['#2c3e50','#fff'],
+        ['#e74c3c','#fff'],['#3498db','#fff'],['#2ecc71','#fff'],['#f39c12','#fff'],
+        ['#9b59b6','#fff'],['#1abc9c','#fff'],['#c0392b','#fff'],['#34495e','#fff'],
+        ['#7f8c8d','#fff'],['#f1c40f','#111'],['#00cec9','#fff'],['#fd79a8','#fff'],
+        ['#6c5ce7','#fff'],['#00b894','#fff'],['#e17055','#fff'],['#74b9ff','#fff'],
+        ['#a29bfe','#fff'],['#ffeaa7','#111'],['#55efc4','#111'],['#fab1a0','#fff'],
+        ['#81ecec','#111'],['#a3cb38','#fff'],['#1289a7','#fff'],['#e1b12c','#111'],
+        ['#44bd32','#fff'],['#ff6b6b','#fff'],['#48dbfb','#111'],['#feca57','#111']
+      ];
+      nums.forEach(n => {
+        const cell = document.createElement('div');
+        cell.className = 'card';
+        cell.style.fontSize = '1.5em';
+        cell.style.display = 'flex';
+        cell.style.alignItems = 'center';
+        cell.style.justifyContent = 'center';
+        const c = colors[(n-1) % colors.length];
+        cell.style.background = c[0];
+        cell.style.color = c[1];
+        cell.style.boxShadow = '0 0 15px ' + c[0] + '88';
+        cell.textContent = n;
+        cell.dataset.num = n;
+        cell.onclick = () => schulteClick(cell, n);
+        grid.appendChild(cell);
+      });
+    }
+
+    function schulteClick(cell, num) {
+      if (!schRunning) {
+        // 第一次点击开始计时
+        schRunning = true;
+        schStartTime = Date.now();
+        schTimer = setInterval(() => {
+          const elapsed = ((Date.now() - schStartTime) / 1000).toFixed(1);
+          document.getElementById('sch-time').textContent = elapsed;
+        }, 100);
+      }
+
+      if (num === schCurrent) {
+        cell.classList.add('flipped', 'matched');
+        cell.style.color = '#4caf50';
+        cell.onclick = null;
+        schCurrent++;
+        document.getElementById('sch-target').textContent = schCurrent <= schTotal ? schCurrent : '✓';
+
+        if (schCurrent > schTotal) {
+          clearInterval(schTimer);
+          const elapsed = ((Date.now() - schStartTime) / 1000).toFixed(2);
+          setTimeout(() => showResult('舒尔特表', elapsed + '秒', schSize + '×' + schSize + ' 共' + schTotal + '个'), 300);
+        }
+      } else {
+        // 点错 - 闪红提示
+        cell.style.background = '#e74c3c';
+        setTimeout(() => {
+          cell.style.background = '';
+        }, 200);
+      }
+    }
+    
+    // 结果弹窗
+    function showResult(title, primary, secondary) {
+      const overlay = document.createElement('div');
+      overlay.className = 'result-overlay';
+      overlay.innerHTML = `
+        <div class="result-card">
+          <h2>🎉 ${title}</h2>
+          <div class="score">${primary}</div>
+          <p>${secondary}</p>
+          <button class="game-btn" onclick="this.closest('.result-overlay').remove()">再来一局</button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+    
+    // 初始化
+    initMemory();
+    initSchulte();
+  </script>
+</body>
+</html>
