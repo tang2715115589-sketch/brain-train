@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大脑训练</title>
+  <title>🧠 大脑训练 - 5合1益智游戏</title>
+  <meta name="description" content="记忆翻牌、数字记忆、反应速度、心算挑战、舒尔特表，五个脑力训练小游戏合集">
+  <meta property="og:title" content="🧠 大脑训练 - 5合1益智游戏">
+  <meta property="og:description" content="记忆翻牌、数字记忆、反应速度、心算挑战、舒尔特表，五个脑力训练小游戏合集">
+  <meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_jpg/iczciciaqL7iciaZibic9XibfI0W9uicfZicdLJH6t8W9y4icicgRiaicj0lM6Zic0O9ic8x7V7Qic3Q7kic4a8ib1iaZfOic8ibT8Q/0?wx_fmt=jpeg">
+  <meta property="og:url" content="https://brain-train-lmby.vercel.app/">
+  <meta name="twitter:card" content="summary_large_image">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -78,25 +84,34 @@
     
     /* 记忆翻牌 */
     .card-grid {
-      display: grid;
-      gap: 12px;
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-flex-wrap: wrap;
+      flex-wrap: wrap;
+      -webkit-box-pack: center;
+      justify-content: center;
       margin: 0 auto;
     }
-    .card-grid.sch3 { grid-template-columns: repeat(3, 1fr); max-width: 270px; }
-    .card-grid.sch4 { grid-template-columns: repeat(4, 1fr); max-width: 360px; }
-    .card-grid.sch5 { grid-template-columns: repeat(5, 1fr); max-width: 450px; }
-    .card-grid.sch6 { grid-template-columns: repeat(6, 1fr); max-width: 540px; }
-    .card-grid:not(.sch3):not(.sch4):not(.sch5):not(.sch6) { grid-template-columns: repeat(4, 1fr); max-width: 400px; }
     .card {
-      aspect-ratio: 1;
+      width: 80px;
+      height: 80px;
+      margin: 6px;
       background: #2a3f5f;
       border-radius: 12px;
       cursor: pointer;
+      display: -webkit-box;
+      display: -ms-flexbox;
       display: flex;
+      -webkit-box-align: center;
+      -ms-flex-align: center;
       align-items: center;
+      -webkit-box-pack: center;
+      -ms-flex-pack: center;
       justify-content: center;
-      font-size: 2.5em;
+      font-size: 32px;
       transition: all 0.3s;
+      -webkit-user-select: none;
       user-select: none;
     }
     .card:hover { transform: scale(1.05); }
@@ -357,6 +372,7 @@
 
     function updateMemoryUI() {
       const grid = document.getElementById('mem-grid');
+      grid.style.maxWidth = '400px';
       grid.innerHTML = '';
       memCards.forEach((sym, i) => {
         const card = document.createElement('div');
@@ -627,8 +643,12 @@
 
     function renderSchulteGrid() {
       const grid = document.getElementById('sch-grid');
-      grid.className = 'card-grid sch' + schSize;
+      grid.className = 'card-grid';
       grid.innerHTML = '';
+
+      const sizes = {3: '30%', 4: '23%', 5: '18%', 6: '15%'};
+      const cellSize = sizes[schSize] || '23%';
+      grid.style.maxWidth = (schSize <= 4 ? schSize * 90 : schSize * 80) + 'px';
 
       // 生成打乱的数字序列
       const nums = Array.from({length: schTotal}, (_, i) => i + 1);
@@ -651,9 +671,14 @@
       nums.forEach(n => {
         const cell = document.createElement('div');
         cell.className = 'card';
-        cell.style.fontSize = '1.5em';
+        cell.style.width = cellSize;
+        cell.style.height = cellSize;
+        cell.style.margin = '4px';
+        cell.style.fontSize = schSize >= 5 ? '1.1em' : '1.5em';
         cell.style.display = 'flex';
+        cell.style.WebkitBoxAlign = 'center';
         cell.style.alignItems = 'center';
+        cell.style.WebkitBoxPack = 'center';
         cell.style.justifyContent = 'center';
         const c = colors[(n-1) % colors.length];
         cell.style.background = c[0];
